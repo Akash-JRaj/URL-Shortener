@@ -24,6 +24,12 @@ public class UrlShortenerController {
 
         String longUrl = request.getLongUrl();
 
+        UrlStore existingUrlStore = urlShortenerRepo.findByLongUrl(longUrl);
+
+        if(existingUrlStore != null) {
+            return ResponseEntity.ok(BASE_URL + existingUrlStore.getShortUrl());
+        }
+
         String shortUrl = UUID.randomUUID().toString().substring(0,6);
 
         UrlStore urlStore = new UrlStore();

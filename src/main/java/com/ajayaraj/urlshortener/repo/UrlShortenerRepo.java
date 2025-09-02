@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface UrlShortenerRepo extends JpaRepository<UrlStore, String> {
     UrlStore findByShortUrl(String code);
+    UrlStore findByLongUrl(String longUrl);
 }
