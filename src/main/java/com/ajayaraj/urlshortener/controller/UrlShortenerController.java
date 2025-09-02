@@ -23,6 +23,10 @@ public class UrlShortenerController {
 
         String longUrl = request.getLongUrl();
 
+        if(!urlShortenerService.isValidUrl(longUrl)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
         UrlStore exists = urlShortenerService.getByLongUrl(longUrl);
 
         if(exists != null) {
