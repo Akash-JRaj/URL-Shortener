@@ -2,14 +2,13 @@ package com.ajayaraj.urlshortener.controller;
 
 import com.ajayaraj.urlshortener.model.UrlRequest;
 import com.ajayaraj.urlshortener.model.UrlStore;
-import com.ajayaraj.urlshortener.repo.UrlShortenerRepo;
+import com.ajayaraj.urlshortener.service.UrlShortenerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.UUID;
 
 @RestController
 public class UrlShortenerController {
@@ -17,34 +16,34 @@ public class UrlShortenerController {
     private static final String BASE_URL = "http://localhost:8080/";
 
     @Autowired
-    private UrlShortenerRepo urlShortenerRepo;
+    private UrlShortenerService urlShortenerService;
 
     @PostMapping("/shorten")
     public ResponseEntity<String> shorten(@RequestBody UrlRequest request) {
 
         String longUrl = request.getLongUrl();
 
-        UrlStore existingUrlStore = urlShortenerRepo.findByLongUrl(longUrl);
+        UrlStore exists = urlShortenerService.getByLongUrl(longUrl);
 
-        if(existingUrlStore != null) {
-            return ResponseEntity.ok(BASE_URL + existingUrlStore.getShortUrl());
+        if(exists != null) {
+            return ResponseEntity.ok(BASE_URL + exists.getShortUrl());
         }
 
-        String shortUrl = UUID.randomUUID().toString().substring(0,6);
+        String shortCode = urlShortenerService.generateCode();
 
         UrlStore urlStore = new UrlStore();
         urlStore.setLongUrl(longUrl);
-        urlStore.setShortUrl(shortUrl);
+        urlStore.setShortUrl(shortCode);
 
-        urlShortenerRepo.save(urlStore);
+        urlShortenerService.addUrlStore(urlStore);
 
-        return ResponseEntity.ok(BASE_URL + shortUrl);
+        return ResponseEntity.ok(BASE_URL + shortCode);
     }
 
     @GetMapping("/{code}")
     public ResponseEntity<Void> getUrl(@PathVariable String code) {
 
-        UrlStore longUrl = urlShortenerRepo.findByShortUrl(code);
+        UrlStore longUrl = urlShortenerService.getByShortCode(code);
 
         if(longUrl == null) {
             return ResponseEntity.notFound().build();
