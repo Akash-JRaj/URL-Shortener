@@ -47,13 +47,27 @@ public class UrlShortenerController {
     @GetMapping("/{code}")
     public ResponseEntity<Void> getUrl(@PathVariable String code) {
 
-        UrlStore longUrl = urlShortenerService.getByShortCode(code);
+        UrlStore urlStore = urlShortenerService.getByShortCode(code);
 
-        if(longUrl == null) {
+        if(urlStore == null) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(longUrl.getLongUrl())).build();
+        urlStore.setHitCount(urlStore.getHitCount() + 1);
+        urlShortenerService.addUrlStore(urlStore);
+
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(urlStore.getLongUrl())).build();
+    }
+
+    @GetMapping("/stats/{code}")
+    public ResponseEntity<UrlStore> getStats(@PathVariable String code) {
+        UrlStore urlStore = urlShortenerService.getByShortCode(code);
+
+        if(urlStore == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok(urlStore);
     }
 
 }
