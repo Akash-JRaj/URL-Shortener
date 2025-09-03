@@ -1,14 +1,20 @@
 package com.ajayaraj.urlshortener.controller;
 
+import com.ajayaraj.urlshortener.model.Stats;
+import com.ajayaraj.urlshortener.model.UrlAccessLog;
 import com.ajayaraj.urlshortener.model.UrlRequest;
 import com.ajayaraj.urlshortener.model.UrlStore;
+import com.ajayaraj.urlshortener.service.UrlAccessLogService;
 import com.ajayaraj.urlshortener.service.UrlShortenerService;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 public class UrlShortenerController {
@@ -17,6 +23,9 @@ public class UrlShortenerController {
 
     @Autowired
     private UrlShortenerService urlShortenerService;
+
+    @Autowired
+    private UrlAccessLogService urlAccessLogService;
 
     @PostMapping("/shorten")
     public ResponseEntity<String> shorten(@RequestBody UrlRequest request) {
@@ -45,15 +54,46 @@ public class UrlShortenerController {
     }
 
     @GetMapping("/{code}")
-    public ResponseEntity<Void> getUrl(@PathVariable String code) {
+    public ResponseEntity<Void> getUrl(@PathVariable String code, HttpServletRequest request) {
 
-        UrlStore longUrl = urlShortenerService.getByShortCode(code);
+        UrlStore urlStore = urlShortenerService.getByShortCode(code);
 
-        if(longUrl == null) {
+        if(urlStore == null) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(longUrl.getLongUrl())).build();
+        urlStore.setHitCount(urlStore.getHitCount() + 1);
+        urlShortenerService.addUrlStore(urlStore);
+
+        UrlAccessLog urlAccessLog = new UrlAccessLog();
+
+        urlAccessLog.setUrlStoreId(urlStore.getId());
+        urlAccessLog.setIp(request.getRemoteAddr());
+
+        urlAccessLogService.addUrlAccessLog(urlAccessLog);
+
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(urlStore.getLongUrl())).build();
+    }
+
+    @GetMapping("/stats/{code}")
+    public ResponseEntity<Stats> getStats(@PathVariable String code) {
+        UrlStore urlStore = urlShortenerService.getByShortCode(code);
+
+        if(urlStore == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<UrlAccessLog> logs = urlAccessLogService.getByUrlStoreId(urlStore.getId());
+
+        Stats stats = new Stats();
+
+        stats.setLongUrl(urlStore.getLongUrl());
+        stats.setShortCode(urlStore.getShortUrl());
+        stats.setHitCount(urlStore.getHitCount());
+
+        stats.setLogs(logs);
+
+        return ResponseEntity.ok(stats);
     }
 
 }

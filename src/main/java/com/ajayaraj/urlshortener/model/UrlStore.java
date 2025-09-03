@@ -10,10 +10,12 @@ public class UrlStore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    private Long id;
 
-    public String shortUrl;
-    public String longUrl;
+    private String shortUrl;
+    private String longUrl;
+
+    private long hitCount;
 
     public Long getId() {
         return id;
@@ -37,5 +39,13 @@ public class UrlStore {
 
     public void setLongUrl(String longUrl) {
         this.longUrl = longUrl;
+    }
+
+    public long getHitCount() {
+        return hitCount;
+    }
+
+    public void setHitCount(long hitCount) {
+        this.hitCount = hitCount;
     }
 }
