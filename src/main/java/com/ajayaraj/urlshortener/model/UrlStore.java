@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class UrlStore {
 
@@ -16,6 +18,9 @@ public class UrlStore {
     private String longUrl;
 
     private long hitCount;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
 
     public Long getId() {
         return id;
@@ -47,5 +52,21 @@ public class UrlStore {
 
     public void setHitCount(long hitCount) {
         this.hitCount = hitCount;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }
