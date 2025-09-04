@@ -1,5 +1,6 @@
 package com.ajayaraj.urlshortener.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Stats {
@@ -7,6 +8,7 @@ public class Stats {
     private String longUrl;
     private String shortCode;
     private long hitCount;
+    private boolean isExpired;
     private List<UrlAccessLog> logs;
 
     public String getLongUrl() {
@@ -39,5 +41,13 @@ public class Stats {
 
     public void setLogs(List<UrlAccessLog> logs) {
         this.logs = logs;
+    }
+
+    public boolean isExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(boolean expired) {
+        isExpired = expired;
     }
 }
