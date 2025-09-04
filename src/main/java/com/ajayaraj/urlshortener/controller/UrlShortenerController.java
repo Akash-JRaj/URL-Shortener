@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -39,6 +40,9 @@ public class UrlShortenerController {
         UrlStore exists = urlShortenerService.getByLongUrl(longUrl);
 
         if(exists != null) {
+            exists.setExpiresAt(request.getExpiresAt());
+            urlShortenerService.updateUrlStore(exists);
+
             return ResponseEntity.ok(BASE_URL + exists.getShortUrl());
         }
 
@@ -47,6 +51,8 @@ public class UrlShortenerController {
         UrlStore urlStore = new UrlStore();
         urlStore.setLongUrl(longUrl);
         urlStore.setShortUrl(shortCode);
+        urlStore.setCreatedAt(LocalDateTime.now());
+        urlStore.setExpiresAt(request.getExpiresAt());
 
         urlShortenerService.addUrlStore(urlStore);
 
@@ -60,6 +66,10 @@ public class UrlShortenerController {
 
         if(urlStore == null) {
             return ResponseEntity.notFound().build();
+        }
+
+        if(urlStore.getExpiresAt() != null && urlStore.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.GONE).build();
         }
 
         urlStore.setHitCount(urlStore.getHitCount() + 1);
@@ -90,6 +100,7 @@ public class UrlShortenerController {
         stats.setLongUrl(urlStore.getLongUrl());
         stats.setShortCode(urlStore.getShortUrl());
         stats.setHitCount(urlStore.getHitCount());
+        stats.setExpired(urlStore.getExpiresAt() != null && urlStore.getExpiresAt().isBefore(LocalDateTime.now()));
 
         stats.setLogs(logs);
 
