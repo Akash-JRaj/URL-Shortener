@@ -37,10 +37,17 @@ public class UrlShortenerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid URL : " + longUrl);
         }
 
+        if(request.getCustomUrl() != null && urlShortenerService.getByShortCode(request.getCustomUrl()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Requested URL " + request.getCustomUrl() + " already exists! Try another one.");
+        }
+
         UrlStore exists = urlShortenerService.getByLongUrl(longUrl);
 
         if(exists != null) {
             exists.setExpiresAt(request.getExpiresAt());
+            if(request.getCustomUrl() != null) {
+                exists.setShortUrl(request.getCustomUrl());
+            }
             urlShortenerService.updateUrlStore(exists);
 
             return ResponseEntity.ok(BASE_URL + exists.getShortUrl());
@@ -50,13 +57,13 @@ public class UrlShortenerController {
 
         UrlStore urlStore = new UrlStore();
         urlStore.setLongUrl(longUrl);
-        urlStore.setShortUrl(shortCode);
+        urlStore.setShortUrl((request.getCustomUrl() == null) ? shortCode : request.getCustomUrl());
         urlStore.setCreatedAt(LocalDateTime.now());
         urlStore.setExpiresAt(request.getExpiresAt());
 
         urlShortenerService.addUrlStore(urlStore);
 
-        return ResponseEntity.ok(BASE_URL + shortCode);
+        return ResponseEntity.ok(BASE_URL + urlStore.getShortUrl());
     }
 
     @GetMapping("/{code}")
